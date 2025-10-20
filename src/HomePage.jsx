@@ -1,4 +1,4 @@
-import React from 'react'; // Only need React here, useState/useEffect removed for cleaner logic
+import React from 'react'; // MUST HAVE: Import React
 import { Search, User } from 'lucide-react';
 import { Card, CardContent } from "./components/ui/Card"; 
 import { Button } from "./components/ui/Button"; 
@@ -8,10 +8,10 @@ import { useNavigate } from 'react-router-dom'; // Crucial for navigation
 const HomePage = ({ navigate, categories, products }) => {
     
     // Logic to select recommended products (first 4 products from the general list)
+    // FIX: This now executes reliably as part of the render logic
     const recommendedProducts = products.slice(0, 4);
 
-    // Logic to derive a list of featured shops for display purposes
-    // (This mocks fetching featured items until API is fully integrated)
+    // Logic to derive a list of featured shops (omitted from render, kept for reference)
     const featuredShops = products.slice(0, 2).map(p => ({
         id: p.shopId, 
         name: p.shopId.charAt(0).toUpperCase() + p.shopId.slice(1),
@@ -47,7 +47,7 @@ const HomePage = ({ navigate, categories, products }) => {
                             <div 
                                 key={cat.id} 
                                 className="flex-shrink-0 text-center cursor-pointer group" 
-                                // --- ROUTER NAVIGATION: Navigate to the Shop List page using the category ID ---
+                                // --- ROUTER NAVIGATION: Link to Shop List Page ---
                                 onClick={() => navigate(`/shoplist/${cat.id}`)}
                             >
                                 <div className="w-16 h-16 bg-card rounded-2xl border flex items-center justify-center mb-1.5 overflow-hidden transition-transform group-hover:scale-105 shadow-sm">
@@ -67,7 +67,7 @@ const HomePage = ({ navigate, categories, products }) => {
                         <Button
                           className="mt-3 bg-green-700 text-white hover:bg-green-700/90 h-8 px-4"
                           size="sm"
-                          // --- ROUTER NAVIGATION: Navigate directly to the groceries shop list ---
+                          // --- ROUTER NAVIGATION: Link directly to groceries shop list ---
                           onClick={() => navigate(`/shoplist/groceries`)}
                         >
                           Shop Now
@@ -91,7 +91,7 @@ const HomePage = ({ navigate, categories, products }) => {
                             <Card 
                                 key={product._id} 
                                 className="cursor-pointer overflow-hidden group shadow-sm" 
-                                // --- ROUTER NAVIGATION: Navigate to the product detail page using the product's ID ---
+                                // --- ROUTER NAVIGATION: Navigate to product detail page ---
                                 onClick={() => navigate(`/product/${product._id}`)} 
                             >
                                 <CardContent className="p-0">

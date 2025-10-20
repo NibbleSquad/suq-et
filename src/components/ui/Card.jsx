@@ -1,6 +1,6 @@
 import * as React from "react"
 // cn utility merges Tailwind classes
-import { cn } from "@/utils/utils"
+import { cn } from "../../utils/utils"
 
 // Main Card container component
 const Card = React.forwardRef(({ className, ...props }, ref) => (

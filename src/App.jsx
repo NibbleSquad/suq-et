@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom'; // Correct Router Imports
+import { Routes, Route, useNavigate } from 'react-router-dom';
 
-// Import Page Components
+// --- Import Page Components ---
+// All paths are relative to the src/ folder where App.jsx lives.
 import HomePage from './HomePage';
 import CategoriesPage from './CategoriesPage';
 import ShopListPage from './ShopListPage';
@@ -13,7 +14,7 @@ import SettingsPage from './SettingsPage';
 import BottomNav from './components/BottomNav';
 
 
-// --- MOCK DATA (Move outside the function) ---
+// --- MOCK DATA DEFINITIONS ---
 const MOCK_SHOPS = [
     { id: 'shoa', name: 'Shoa Supermarket', category: 'groceries', image: '/images/shoa.jpg', description: 'Your everyday essentials.' },
     { id: 'tomoca', name: 'Tomoca Coffee', category: 'cafe', image: '/images/Tomoca Coffee.jpg', description: 'The original Ethiopian coffee.' },
@@ -22,7 +23,7 @@ const MOCK_SHOPS = [
 const MOCK_PRODUCTS = [
     { _id: 'prod1', id: 1, name: 'Fresh Avocado', price: 89.50, oldPrice: 120.00, image: '/images/avocado.png', shopId: 'shoa', rating: 4.8, reviews: 70, description: "Fresh, creamy avocados, perfect for any meal." },
     { _id: 'prod2', id: 5, name: 'Espresso', price: 40.00, image: '/images/espresso.png', shopId: 'tomoca', rating: 4.9, reviews: 150, description: "A rich and aromatic single shot of our finest blend."},
-    { _id: 'prod3', id: 3, name: 'Organic Honey', price: 450.00, image: '/images/honey.png', shopId: 'shoa', rating: 4.7, reviews: 45, description: "100% pure organic honey, sourced locally."},
+    { _id: 'prod3', id: 3, name: 'Organic Honey', price: 450.00, image: '/images/honey.png', shopId: 'shoa', rating: 4.7, reviews: 45, description: "100% pure organic honey, sourced locally." },
     { _id: 'prod4', id: 2, name: 'Wireless Headphones', price: 2350.00, image: '/images/headset.png', shopId: 'gebeya', rating: 4.6, reviews: 98, description: "High-fidelity sound with noise-cancelling technology."},
     { _id: 'prod6', id: 7, name: 'Elegant Shirt', price: 1200.00, image: '/icons/cloths.png', shopId: 'apparel', rating: 4.2, reviews: 50, description: "A high-quality garment for formal wear."},
 ];
@@ -38,10 +39,10 @@ const MOCK_CATEGORIES = [
 
 
 function App() {
-    const navigate = useNavigate(); // Router hook
+    const navigate = useNavigate();
     const [cart, setCart] = useState([]);
     
-    // --- Cart Functions (Remain the same) ---
+    // --- Cart Functions ---
     const handleAddToCart = (product, quantity) => {
         setCart(prevCart => {
             const existingItemIndex = prevCart.findIndex(item => item._id === product._id); 
@@ -50,11 +51,11 @@ function App() {
                 updatedCart[existingItemIndex].quantity += quantity;
                 return updatedCart;
             } else {
-                return [...prevCart, { ...product, quantity }];
+                return [...prevCart, { ...product, quantity, shopId: product.shopId }];
             }
         });
-        alert(`${quantity} of ${product.name} added to cart!`);
-        navigate('/cart'); // Navigate using router
+        alert(`${quantity} of ${product.name} added to cart!`); 
+        navigate('/cart');
     };
 
     const handleUpdateCart = (productId, change) => {
@@ -72,6 +73,9 @@ function App() {
     // ------------------------------------------
 
     const cartItemCount = cart.reduce((count, item) => count + item.quantity, 0);
+    const activePath = window.location.pathname;
+
+    // Props object passed to all Route elements
     const globalProps = {
         handleAddToCart, 
         cart, 
@@ -79,16 +83,14 @@ function App() {
         shops: MOCK_SHOPS, 
         products: MOCK_PRODUCTS, 
         categories: MOCK_CATEGORIES, 
-        navigate // Pass the router navigate function
+        navigate 
     };
-
-    const activePath = window.location.pathname;
 
     // Determine which tab is active for the BottomNav based on URL path
     const getActiveTab = (path) => {
         if (path === '/') return 'home';
         if (path.startsWith('/categories')) return 'categories';
-        if (path.startsWith('/shoplist')) return 'categories'; // Maps shoplist to categories tab
+        if (path.startsWith('/shoplist')) return 'categories'; 
         if (path.startsWith('/cart')) return 'cart';
         if (path.startsWith('/settings')) return 'settings';
         return 'home';
@@ -115,11 +117,12 @@ function App() {
                 <Route path="*" element={<HomePage {...globalProps} />} /> 
             </Routes>
             
-            {/* Bottom Nav: Hide on dynamic detail pages */}
+            {/* Bottom Nav: Only visible on main navigation tabs */}
+            {/* Hide on dynamic detail pages (/product/ or /shop/) */}
             {!(activePath.startsWith('/product/') || activePath.startsWith('/shop/')) && (
                 <BottomNav 
                     activePage={getActiveTab(activePath)} 
-                    onNavigate={(page) => navigate(`/${page}`)} // Navigate using router
+                    onNavigate={(page) => navigate(`/${page}`)} // Uses the navigate function for routing
                     cartCount={cartItemCount} 
                 />
             )}

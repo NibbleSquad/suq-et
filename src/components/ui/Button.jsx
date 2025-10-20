@@ -2,7 +2,7 @@ import * as React from "react"
 // class-variance-authority helps create variants (like primary, secondary buttons)
 import { cva } from "class-variance-authority";
 // cn utility merges Tailwind classes intelligently (handles conflicts)
-import { cn } from "@/utils/utils"
+import { cn } from "../../utils/utils"
 
 // Define button styles and variants using cva
 const buttonVariants = cva(

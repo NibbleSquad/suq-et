@@ -1,23 +1,15 @@
-import React, { useEffect, useRef } from 'react';
-// Import icons
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+// Import icons from lucide-react library
 import { Home, LayoutGrid, ShoppingCart, Settings, NfcIcon } from 'lucide-react';
 import { Button } from './ui/Button'; 
-import { useNavigate } from 'react-router-dom'; // <-- NEW IMPORT
 
-// --- MOCK PRODUCT DATA (for the NFC scan result) ---
-// When NFC scans, it gives us an ID (prod4). We look up the full product details here.
+// --- MOCK PRODUCT DATA (The product we will "read" from the card) ---
 const NFC_MOCK_PRODUCT = { 
-    _id: 'prod4', 
-    id: 2, 
+    _id: 'prod4', // Wireless Headphones ID
     name: 'Wireless Headphones', 
-    price: 2350.00, 
-    image: '/images/headset.png', 
-    shopId: 'gebeya', 
-    rating: 4.6, 
-    reviews: 98, 
-    description: "High-fidelity sound with noise-cancelling technology." 
 };
-// --------------------------------------------------
+// ------------------------------------------------------------------
 
 
 // Reusable component for each navigation item
@@ -30,6 +22,7 @@ const NavItem = ({ page, icon, label, isActive, onNavigate, count }) => {
         >
             {icon}
             <span className="text-xs mt-1 font-medium">{label}</span>
+            {/* Show badge only if count is greater than 0 */}
             {count > 0 && (
                 <span className="absolute top-0 right-1/2 translate-x-3 md:translate-x-4 w-4 h-4 bg-primary text-white text-[10px] leading-4 font-bold rounded-full flex items-center justify-center">
                     {count > 9 ? '9+' : count}
@@ -39,68 +32,85 @@ const NavItem = ({ page, icon, label, isActive, onNavigate, count }) => {
     );
 };
 
-// Main Bottom Navigation Bar component
-// Removed navigateTo prop and used useNavigate hook internally
-const BottomNav = ({ activePage, onNavigate, cartCount }) => {
-    const navigate = useNavigate(); // Initialize router hook
-    const nfc = useRef(null);
 
-    // --- NFC Handlers ---
+// Main Bottom Navigation Bar component
+const BottomNav = ({ activePage, onNavigate, cartCount }) => {
+    const navigate = useNavigate(); // Router hook for programmatic navigation
+    const nfc = useRef(null);
+    const [isScanning, setIsScanning] = useState(false); // State for button feedback
 
     // 1. The function that runs when NFC data is successfully read
     const onNfcData = (event) => {
-        // In a real app, you would parse event.message/data to get the product ID.
-        // For now, we use a fixed mock product ID: 'prod4'
+        setIsScanning(false);
         const scannedId = NFC_MOCK_PRODUCT._id; 
         
-        // --- CRITICAL FIX: Use router navigate to the correct URL ---
-        // This opens the URL: http://localhost:5173/product/prod4
-        alert(`NFC Scanned! Redirecting to Product ID: ${scannedId}`);
-        navigate(`/product/${scannedId}`);
+        // Use a non-blocking navigation for a smoother experience
+        setTimeout(() => {
+             alert(`Tag Detected! Redirecting to Product: ${NFC_MOCK_PRODUCT.name}`);
+             navigate(`/product/${scannedId}`); // Navigate using the router
+        }, 50); 
     };
 
+    // 2. Function to initiate the NFC scan with a fallback
     const scanNfc = async () => {
-        // Check if NFC API is available (only available on modern Android devices in the browser)
+        // --- STEP 1: CHECK FOR SUPPORT ---
         if (typeof window.NDEFReader === 'undefined') {
-            alert('Your device does not support Web NFC or the feature is unavailable.');
+            alert('Device error: Web NFC is not supported. Use latest Android Chrome on HTTPS.');
             return;
         }
 
+        setIsScanning(true);
+        
         try {
             if (nfc.current === null) {
-                nfc.current = new NDEFReader();
+                nfc.current = new window.NDEFReader();
             }
 
+            // Start scanning - this opens the OS prompt
             await nfc.current.scan();
-            const reader = nfc.current;
+            
+            // Set the manual bypass timer for the hackathon demo
+            let scanTimeout = setTimeout(() => {
+                // If 8 seconds pass, offer manual navigation
+                const proceed = confirm("Scan failed or timed out. Do you want to proceed to the product page manually?");
+                if (proceed) {
+                    onNfcData(); // Manually trigger navigation
+                } else {
+                    setIsScanning(false); // Stop spinner
+                }
+            }, 8000); // 8-second timeout
 
-            // Only add listeners once per scan session
-            const readingListener = (event) => onNfcData(event);
-            const errorListener = (error) => console.error("NFC Reading Error:", error);
+            // Attach success and error listeners
+            const reader = nfc.current;
             
-            reader.addEventListener('reading', readingListener, { once: true });
-            reader.addEventListener('readingerror', errorListener, { once: true });
+            // Event listeners to clear the timeout and handle success/error
+            const readingListener = (event) => {
+                clearTimeout(scanTimeout); 
+                onNfcData(event); // Proceed with navigation
+            };
             
-            // Clean up the listeners when the component unmounts
-            return () => {
-                 reader.removeEventListener('reading', readingListener);
-                 reader.removeEventListener('readingerror', errorListener);
+            const errorListener = (error) => {
+                console.error("NFC Reading Error:", error);
+                clearTimeout(scanTimeout);
+                setIsScanning(false);
+                alert("NFC Scan failed. Ensure NFC is enabled and try tapping the card again.");
             };
 
+            // Add listeners
+            reader.addEventListener('reading', readingListener, { once: true });
+            reader.addEventListener('readingerror', errorListener, { once: true });
+
         } catch (error) {
-            console.error("NFC Scan failed:", error);
-            alert("NFC Scan failed. Ensure NFC is enabled.");
+            console.error("NFC Scan initiation failed:", error);
+            setIsScanning(false);
+            alert("NFC setup failed. Please try tapping the button again.");
         }
     };
-
-    // Cleanup NFC listener on component unmount
+    
+    // 3. Cleanup NFC listener on component unmount
     useEffect(() => {
-        // The return function acts as cleanup when the component is removed
         return () => {
-            if (nfc.current) {
-                // If you call this manually, you'd need to stop the scan too, but
-                // usually letting the component handle the cleanup is cleaner.
-            }
+            // Standard cleanup logic
         };
     }, []);
 
@@ -114,11 +124,23 @@ const BottomNav = ({ activePage, onNavigate, cartCount }) => {
     return (
         <nav className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t flex justify-around p-2 max-w-md mx-auto z-50 h-[60px]">
 
-            {/* NFC/Scan Button: Fixed bottom-right corner */}
-            {/* Using a margin below the button to position it above the Nav bar */}
+            {/* NFC/Scan Button */}
             <div className="absolute right-0 bottom-[60px] p-4">
-                <Button onClick={scanNfc} size="icon" className="shadow-lg h-12 w-12 rounded-full bg-blue-600 hover:bg-blue-700">
-                    <NfcIcon size={24} />
+                <Button 
+                    onClick={scanNfc} 
+                    size="icon" 
+                    className="shadow-lg h-12 w-12 rounded-full bg-blue-600 hover:bg-blue-700"
+                    disabled={isScanning} 
+                >
+                    {isScanning ? (
+                        // Spinner feedback
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    ) : (
+                        <NfcIcon size={24} />
+                    )}
                 </Button>
             </div>
 

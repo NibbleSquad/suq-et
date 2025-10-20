@@ -10,6 +10,8 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173
-  }
+  port: 5173,
+  // CRITICAL FIX: Allow the new Cloudflare Tunnel URL
+  allowedHosts: ['respiratory-bias-essentials-hydraulic.trycloudflare.com', 'localhost', '127.0.0.1'] 
+}
 })

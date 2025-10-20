@@ -1,28 +1,29 @@
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom'; // Crucial imports
 import PageHeader from './components/PageHeader';
 import { Card, CardContent } from "./components/ui/Card"; 
 
-// Props passed from App.jsx: categories, shops
+// Props passed from App.jsx: categories, shops (MOCK_SHOPS)
 const ShopListPage = ({ categories, shops }) => {
     const navigate = useNavigate();
-    const { categoryId } = useParams(); // <-- Get category ID from URL
+    const { categoryId } = useParams(); // Gets the ID from the URL (e.g., 'groceries')
 
-    // Find the category object based on the URL parameter for the title
+    // 1. Find the category object based on the URL parameter for the title
     const category = categories.find(c => c.id === categoryId);
     
-    // Filter shops based on the category ID read from the URL
+    // 2. Filter shops based on the category ID read from the URL
     const filteredShops = shops.filter(shop => shop.category === categoryId);
 
-    // If the data structure is mocked/loading, show a fallback title
+    // Set title, handling case where category might not be found in mock data
     const title = category ? category.name : 'Shops';
 
     return (
         <div className="animate-in fade-in duration-300">
-            {/* FIX: Use navigate(-1) for a reliable history back action */}
+            {/* Header: Back button uses router history */}
             <PageHeader title={title} onBack={() => navigate(-1)} /> 
             
             <main className="p-4 space-y-4">
+                {/* 3. Render the filtered shops */}
                 {filteredShops.length > 0 ? (
                     filteredShops.map(shop => (
                         <Card
@@ -45,6 +46,7 @@ const ShopListPage = ({ categories, shops }) => {
                         </Card>
                     ))
                 ) : (
+                    // Display message if no shops are found
                     <p className="text-center text-muted-foreground mt-8 pt-8">No shops found in the {title} category yet.</p>
                 )}
             </main>

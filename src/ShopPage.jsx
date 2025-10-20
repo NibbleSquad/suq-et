@@ -1,30 +1,29 @@
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom'; // NEW IMPORTS
+import { useNavigate, useParams } from 'react-router-dom';
 import PageHeader from './components/PageHeader';
 import { Card, CardContent } from "./components/ui/Card"; 
 
-// Props: goBack is replaced by navigate(-1). 'shop' is derived from URL/MOCK DATA
-const ShopPage = ({ products, shops }) => {
+const ShopPage = ({ products, shops }) => { // Props: products, shops
     const navigate = useNavigate();
-    const { shopId } = useParams(); // Get shop ID from URL: /shop/:shopId
+    const { shopId } = useParams(); // Gets the ID from the URL
     
-    // Find the current shop and its products using the ID from the URL
+    // Find the current shop based on the URL parameter
     const shop = shops.find(s => s.id === shopId);
+    // Filter products belonging to the current shop ID
     const shopProducts = products.filter(p => p.shopId === shopId);
 
     // Handle case where shop is not found (or data is still loading)
     if (!shop) {
         return (
             <div className="p-8 text-center">
-                <PageHeader title="Loading..." onBack={() => navigate(-1)} />
-                <p className='mt-8 text-muted-foreground'>Loading shop data or shop not found...</p>
+                <PageHeader title="Shop Not Found" onBack={() => navigate(-1)} />
+                <p className='mt-8 text-muted-foreground'>Shop data could not be loaded or URL is invalid.</p>
             </div>
         );
     }
-
+    
     return (
         <div className="animate-in fade-in duration-300">
-            {/* Use navigate(-1) for back */}
             <PageHeader title={shop.name} onBack={() => navigate(-1)} /> 
             <main className="p-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -32,7 +31,7 @@ const ShopPage = ({ products, shops }) => {
                         <Card
                             key={product._id} 
                             className="cursor-pointer overflow-hidden group shadow-sm"
-                            // --- UPDATED NAVIGATION ---
+                            // CORRECT USAGE: This line is inside the JSX for the Card
                             onClick={() => navigate(`/product/${product._id}`)}
                         >
                             <CardContent className="p-0">
@@ -48,7 +47,7 @@ const ShopPage = ({ products, shops }) => {
                     ))}
                 </div>
                 {shopProducts.length === 0 && (
-                  <p className="text-center text-muted-foreground mt-8 pt-8">No products available in this shop yet.</p>
+                    <p className="text-center text-muted-foreground mt-8 pt-8">No products available in this shop yet.</p>
                 )}
             </main>
         </div>
