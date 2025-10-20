@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 // Import icons from lucide-react library
 import { Home, LayoutGrid, ShoppingCart, Settings, ScanIcon, NfcIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button.jsx';
@@ -52,13 +52,35 @@ const BottomNav = ({ navigateTo, activePage, onNavigate, cartCount }) => {
 
   const nfc = useRef(null);
 
-  const onNfcData = () => {
-    alert('Product')
+  // keep latest navigation functions in a ref so the stable handler can call them
+  const navigateRef = useRef({ navigateTo, onNavigate });
+  useEffect(() => {
+    navigateRef.current = { navigateTo, onNavigate };
+  }, [navigateTo, onNavigate]);
 
-    navigateTo('productDetail',
-      { _id: 'prod6', id: 7, name: 'Elegant Shirt', price: 1200.00, image: '/icons/cloths.png', shopId: 'apparel', rating: 4.2, reviews: 50, description: "A high-quality garment for formal wear." },
-    );
-  };
+  // stable handler (accepts event) — uses navigateRef to call latest navigation fn
+  const handleNfcData = useCallback((event) => {
+    // parse event if needed, e.g. event.message.records...
+    // minimal feedback:
+    alert('Product');
+
+    const nav = navigateRef.current.navigateTo ?? navigateRef.current.onNavigate;
+    if (typeof navigateRef.current.navigateTo === 'function') {
+      // navigateTo supports params
+      navigateRef.current.navigateTo(
+        'productDetail',
+        { _id: 'prod6', id: 7, name: 'Elegant Shirt', price: 1200.00, image: '/icons/cloths.png', shopId: 'apparel', rating: 4.2, reviews: 50, description: "A high-quality garment for formal wear." },
+      );
+    } else if (typeof navigateRef.current.onNavigate === 'function') {
+      // fallback: call onNavigate with page only
+      navigateRef.current.onNavigate('productDetail');
+    } else {
+      console.warn('No navigation function provided to BottomNav');
+    }
+  }, []);
+
+  // avoid attaching duplicate listeners
+  const listenerAttached = useRef(false);
 
   const scanNfc = async () => {
     if (nfc.current == null) {
@@ -73,8 +95,12 @@ const BottomNav = ({ navigateTo, activePage, onNavigate, cartCount }) => {
 
     const reader = nfc.current;
 
-    reader.addEventListener('reading', onNfcData);
-    reader.addEventListener('readingerror', onNfcData);
+    // attach the stable handler only once
+    if (!listenerAttached.current) {
+      reader.addEventListener('reading', handleNfcData);
+      reader.addEventListener('readingerror', handleNfcData);
+      listenerAttached.current = true;
+    }
   };
 
   useEffect(() => {
@@ -83,11 +109,14 @@ const BottomNav = ({ navigateTo, activePage, onNavigate, cartCount }) => {
         return;
 
       const reader = nfc.current;
-      reader.removeEventListener('reading', onNfcData);
-      reader.removeEventListener('readingerror', onNfcData);
+      if (listenerAttached.current) {
+        reader.removeEventListener('reading', handleNfcData);
+        reader.removeEventListener('readingerror', handleNfcData);
+        listenerAttached.current = false;
+      }
       nfc.current = null;
     };
-  }, []);
+  }, [handleNfcData]);
 
   return (
 
