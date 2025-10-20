@@ -52,11 +52,12 @@ const BottomNav = ({activePage, onNavigate, cartCount}) => {
 
   const nfc = useRef(null);
 
-  const onNfcData = ({message, serialNumber}) => {
-    alert(message + serialNumber);
+  const onNfcData = () => {
+    // TODO: retrieve product
+    alert("Scan");
   };
 
-  const scanNfc = () => {
+  const scanNfc = async () => {
     if (nfc.current == null) {
       if (typeof window.NDEFReader == 'undefined') {
         alert('Your device doesn\'t support this feature.');
@@ -64,11 +65,13 @@ const BottomNav = ({activePage, onNavigate, cartCount}) => {
       }
 
       nfc.current = new NDEFReader();
+      await nfc.current.scan();
     }
 
     const reader = nfc.current;
 
     reader.addEventListener('reading', onNfcData);
+    reader.addEventListener('readingerror', onNfcData);
   };
 
   useEffect(() => {
@@ -78,6 +81,7 @@ const BottomNav = ({activePage, onNavigate, cartCount}) => {
 
       const reader = nfc.current;
       reader.removeEventListener('reading', onNfcData);
+      reader.removeEventListener('readingerror', onNfcData);
       nfc.current = null;
     };
   }, []);
