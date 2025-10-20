@@ -60,24 +60,26 @@ const BottomNav = ({ navigateTo, activePage, onNavigate, cartCount }) => {
 
   // stable handler (accepts event) — uses navigateRef to call latest navigation fn
   const handleNfcData = useCallback((event) => {
-    // parse event if needed, e.g. event.message.records...
-    // minimal feedback:
-    alert('Product');
+    // First show the alert
+    alert('Product detected!');
 
-    const nav = navigateRef.current.navigateTo ?? navigateRef.current.onNavigate;
-    if (typeof navigateRef.current.navigateTo === 'function') {
-      // navigateTo supports params
-      navigateRef.current.navigateTo(
-        'productDetail',
-        { _id: 'prod6', id: 7, name: 'Elegant Shirt', price: 1200.00, image: '/icons/cloths.png', shopId: 'apparel', rating: 4.2, reviews: 50, description: "A high-quality garment for formal wear." },
-      );
-    } else if (typeof navigateRef.current.onNavigate === 'function') {
-      // fallback: call onNavigate with page only
-      navigateRef.current.onNavigate('productDetail');
-    } else {
-      console.warn('No navigation function provided to BottomNav');
+    // Then navigate using the primary navigation function
+    if (typeof navigateTo === 'function') {
+      navigateTo('product', {
+        _id: 'prod6',
+        id: 7,
+        name: 'Elegant Shirt',
+        price: 1200.00,
+        image: '/icons/cloths.png',
+        shopId: 'apparel',
+        rating: 4.2,
+        reviews: 50,
+        description: "A high-quality garment for formal wear.",
+      });
+    } else if (typeof onNavigate === 'function') {
+      onNavigate('product');
     }
-  }, []);
+  }, [navigateTo, onNavigate]);
 
   // avoid attaching duplicate listeners
   const listenerAttached = useRef(false);
