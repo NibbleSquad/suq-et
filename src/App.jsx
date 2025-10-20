@@ -152,7 +152,7 @@ function App() {
             {renderPage()}
             {/* Render BottomNav only if not on product detail page */}
             {currentPage.name !== 'productDetail' && (
-              <BottomNav activePage={currentPage.name} onNavigate={navigateTab} cartCount={cartItemCount} />
+              <BottomNav navigateTo={navigateTo} activePage={currentPage.name} onNavigate={navigateTab} cartCount={cartItemCount} />
             )}
         </div>
     );
