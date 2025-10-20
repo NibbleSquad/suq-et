@@ -1,0 +1,68 @@
+/* Import Tailwind CSS base styles, components, and utilities */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+ 
+/* Define CSS variables for the light theme (used by Tailwind config and shadcn) */
+@layer base {
+  :root {
+    --background: 0 0% 100%; /* White */
+    --foreground: 222.2 84% 4.9%; /* Dark Gray */
+
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 222.2 84% 4.9%; /* Dark Gray */
+ 
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 222.2 84% 4.9%; /* Dark Gray */
+ 
+    --primary: 142.1 76.2% 36.3%; /* Green */
+    --primary-foreground: 355.7 100% 97.3%; /* Almost White */
+ 
+    --secondary: 210 40% 96.1%; /* Light Gray */
+    --secondary-foreground: 222.2 47.4% 11.2%; /* Dark Blue-Gray */
+ 
+    --muted: 210 40% 96.1%; /* Light Gray */
+    --muted-foreground: 215.4 16.3% 46.9%; /* Medium Gray */
+ 
+    --accent: 210 40% 96.1%; /* Light Gray */
+    --accent-foreground: 222.2 47.4% 11.2%; /* Dark Blue-Gray */
+ 
+    --destructive: 0 84.2% 60.2%; /* Red */
+    --destructive-foreground: 210 40% 98%; /* Almost White */
+
+    --border: 214.3 31.8% 91.4%; /* Light Gray Border */
+    --input: 214.3 31.8% 91.4%; /* Light Gray Input Border */
+    --ring: 142.1 76.2% 36.3%; /* Green Focus Ring */
+ 
+    --radius: 0.75rem; /* Default border radius */
+  }
+ 
+  /* Define dark theme variables here if needed */
+  /* .dark { ... } */
+}
+ 
+/* Apply base styles */
+@layer base {
+  * {
+    /* Apply border color variable */
+    @apply border-border;
+  }
+  body {
+    /* Apply background and text color variables */
+    @apply bg-background text-foreground;
+    /* Set default font */
+    font-family: 'Inter', sans-serif;
+    /* Improve font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Utility to hide scrollbars */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
