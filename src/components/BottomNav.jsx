@@ -51,10 +51,24 @@ const BottomNav = ({ activePage, onNavigate, cartCount }) => {
         const scannedId = event && event.serialNumber ? event.serialNumber : NFC_MOCK_PRODUCT._id;
         // Small delay so UI can settle (optional)
         setTimeout(() => {
-            alert(`Tag Detected! Redirecting to Product: ${NFC_MOCK_PRODUCT.name}`);
             navigate(`/product/${NFC_MOCK_PRODUCT._id}`);
         }, 50);
     };
+
+    const onScanError = (error) => {
+        console.error("NFC Reading Error:", error);
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+        }
+        setIsScanning(false);
+        alert("NFC Scan failed. Ensure NFC is enabled and try tapping again.");
+        // abort the scan to be safe
+        if (controllerRef.current) {
+            controllerRef.current.abort();
+            controllerRef.current = null;
+        }
+    }
 
     // Function to initiate the NFC scan with a fallback
     const scanNfc = async () => {
@@ -89,17 +103,13 @@ const BottomNav = ({ activePage, onNavigate, cartCount }) => {
             // Set the manual bypass timer for the hackathon demo
             timeoutRef.current = setTimeout(() => {
                 // If 8 seconds pass, offer manual navigation
-                const proceed = confirm("Scan failed or timed out. Do you want to proceed to the product page manually?");
-                if (proceed) {
-                    // treat as manual detection
-                    handleNfcDetected();
-                } else {
-                    setIsScanning(false); // Stop spinner
-                    // abort the scan to clean up
-                    if (controllerRef.current) {
-                        controllerRef.current.abort();
-                        controllerRef.current = null;
-                    }
+                alert("Scan failed or timed out. Do you want to proceed to the product page manually?");
+
+                setIsScanning(false); // Stop spinner
+                // abort the scan to clean up
+                if (controllerRef.current) {
+                    controllerRef.current.abort();
+                    controllerRef.current = null;
                 }
             }, 8000); // 8-second timeout
 
@@ -115,20 +125,7 @@ const BottomNav = ({ activePage, onNavigate, cartCount }) => {
                 handleNfcDetected(event);
             };
 
-            errorListenerRef.current = (error) => {
-                console.error("NFC Reading Error:", error);
-                if (timeoutRef.current) {
-                    clearTimeout(timeoutRef.current);
-                    timeoutRef.current = null;
-                }
-                setIsScanning(false);
-                alert("NFC Scan failed. Ensure NFC is enabled and try tapping again.");
-                // abort the scan to be safe
-                if (controllerRef.current) {
-                    controllerRef.current.abort();
-                    controllerRef.current = null;
-                }
-            };
+            errorListenerRef.current = handleNfcDetected;
 
             // Add listeners
             nfcRef.current.addEventListener('reading', readingListenerRef.current);
