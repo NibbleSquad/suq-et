@@ -75,7 +75,7 @@ const HomePage = ({ navigate, categories, products }) => {
                     </div>
                     {/* Decorative image */}
                     <img 
-                      src="/images/groceries_banner.jpg" 
+                      src="/images/fresh grocieries.jpg"
                       className="w-20 h-auto rounded-lg ml-3 opacity-80" 
                       alt="Groceries Promotion"
                     />
