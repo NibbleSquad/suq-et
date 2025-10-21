@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 // Import icons from lucide-react library
-import { Home, LayoutGrid, ShoppingCart, Settings, NfcIcon } from 'lucide-react';
-import { Button } from './ui/Button'; 
+import { Home, LayoutGrid, ShoppingCart, Settings, NfcIcon, XIcon } from 'lucide-react';
+import { Button } from './ui/Button';
+import { toast } from 'sonner';
 
 // --- MOCK PRODUCT DATA (The product we will "read" from the card) ---
-const NFC_MOCK_PRODUCT = { 
+const NFC_MOCK_PRODUCT = {
     _id: 'prod4', // Wireless Headphones ID
-    name: 'Wireless Headphones', 
+    name: 'Wireless Headphones',
 };
 // ------------------------------------------------------------------
 
@@ -62,7 +63,9 @@ const BottomNav = ({ activePage, onNavigate, cartCount }) => {
             timeoutRef.current = null;
         }
         setIsScanning(false);
-        alert("NFC Scan failed. Ensure NFC is enabled and try tapping again.");
+        toast('NFC Scan failed. Ensure NFC is enabled and try tapping again.', {
+            icon: <XIcon />,
+        });
         // abort the scan to be safe
         if (controllerRef.current) {
             controllerRef.current.abort();
@@ -74,9 +77,16 @@ const BottomNav = ({ activePage, onNavigate, cartCount }) => {
     const scanNfc = async () => {
         // --- STEP 1: CHECK FOR SUPPORT ---
         if (typeof window.NDEFReader === 'undefined') {
-            alert('Device error: Web NFC is not supported. Use latest Android Chrome on HTTPS.');
+            toast('Device error: Web NFC is not supported.', {
+                icon: <XIcon />,
+            });
             return;
         }
+
+
+        toast('Ready to scan. Hold your phone close to the product.', {
+            icon: <NfcIcon />,
+        });
 
         // Prevent duplicate scans
         if (isScanning) return;
@@ -103,7 +113,10 @@ const BottomNav = ({ activePage, onNavigate, cartCount }) => {
             // Set the manual bypass timer for the hackathon demo
             timeoutRef.current = setTimeout(() => {
                 // If 8 seconds pass, offer manual navigation
-                alert("Scan failed or timed out. Do you want to proceed to the product page manually?");
+                toast('Scan failed or timed out.', {
+                    description: 'Please make sure your phone is close to the product.',
+                    icon: <XIcon />,
+                });
 
                 setIsScanning(false); // Stop spinner
                 // abort the scan to clean up
@@ -136,19 +149,21 @@ const BottomNav = ({ activePage, onNavigate, cartCount }) => {
             setIsScanning(false);
             // If the controller exists, abort and cleanup
             if (controllerRef.current) {
-                try { controllerRef.current.abort(); } catch (e) {}
+                try { controllerRef.current.abort(); } catch (e) { }
                 controllerRef.current = null;
             }
-            alert("NFC setup failed. Please try tapping the button again.");
+            toast('NFC setup failed. Please try tapping the button again.', {
+                icon: <XIcon />,
+            });
         }
     };
-    
+
     // Cleanup NFC listener on component unmount
     useEffect(() => {
         return () => {
             // Abort any active scan
             if (controllerRef.current) {
-                try { controllerRef.current.abort(); } catch (e) {}
+                try { controllerRef.current.abort(); } catch (e) { }
                 controllerRef.current = null;
             }
 
@@ -190,17 +205,17 @@ const BottomNav = ({ activePage, onNavigate, cartCount }) => {
 
             {/* NFC/Scan Button */}
             <div className="absolute right-0 bottom-[60px] p-4">
-                <Button 
-                    onClick={scanNfc} 
-                    size="icon" 
+                <Button
+                    onClick={scanNfc}
+                    size="icon"
                     className="shadow-lg h-12 w-12 rounded-full bg-blue-600 hover:bg-blue-700"
-                    disabled={isScanning} 
+                    disabled={isScanning}
                 >
                     {isScanning ? (
                         // Spinner feedback
                         <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                     ) : (
                         <NfcIcon size={24} />

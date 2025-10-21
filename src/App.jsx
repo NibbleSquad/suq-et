@@ -30,7 +30,7 @@ const MOCK_PRODUCTS = [
 const MOCK_CATEGORIES = [
     { id: 'groceries', name: 'Groceries', image: '/icons/grocery.png' },
     { id: 'electronics', name: 'Electronics', image: '/icons/electronics.png' },
-    { id: 'cafe', name: 'Cafe', image: '/icons/cafe.jpg' },
+    { id: 'cafe', name: 'Cafe', image: '/icons/cafe.jpg' }, 
     { id: 'fashion', name: 'Apparel', image: '/icons/cloths.png'},
     { id: 'beauty', name: 'Beauty', image: '/icons/beauty.png'},
     { id: 'home', name: 'Home Goods', image: '/icons/Home Goods.png'},
