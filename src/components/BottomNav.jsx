@@ -36,22 +36,27 @@ const NavItem = ({ page, icon, label, isActive, onNavigate, count }) => {
 // Main Bottom Navigation Bar component
 const BottomNav = ({ activePage, onNavigate, cartCount }) => {
     const navigate = useNavigate(); // Router hook for programmatic navigation
-    const nfc = useRef(null);
+    const nfcRef = useRef(null); // will hold NDEFReader instance
+    const controllerRef = useRef(null); // will hold AbortController for scan
+    const readingListenerRef = useRef(null);
+    const errorListenerRef = useRef(null);
+    const timeoutRef = useRef(null);
+
     const [isScanning, setIsScanning] = useState(false); // State for button feedback
 
-    // 1. The function that runs when NFC data is successfully read
-    const onNfcData = (event) => {
+    // Helper: when NFC is detected, navigate to product
+    const handleNfcDetected = (event) => {
         setIsScanning(false);
-        const scannedId = NFC_MOCK_PRODUCT._id; 
-        
-        // Use a non-blocking navigation for a smoother experience
+        // Prefer serialNumber if present (many readers/tags expose it)
+        const scannedId = event && event.serialNumber ? event.serialNumber : NFC_MOCK_PRODUCT._id;
+        // Small delay so UI can settle (optional)
         setTimeout(() => {
-             alert(`Tag Detected! Redirecting to Product: ${NFC_MOCK_PRODUCT.name}`);
-             navigate(`/product/${scannedId}`); // Navigate using the router
-        }, 50); 
+            alert(`Tag Detected! Redirecting to Product: ${NFC_MOCK_PRODUCT.name}`);
+            navigate(`/product/${NFC_MOCK_PRODUCT._id}`);
+        }, 50);
     };
 
-    // 2. Function to initiate the NFC scan with a fallback
+    // Function to initiate the NFC scan with a fallback
     const scanNfc = async () => {
         // --- STEP 1: CHECK FOR SUPPORT ---
         if (typeof window.NDEFReader === 'undefined') {
@@ -59,58 +64,120 @@ const BottomNav = ({ activePage, onNavigate, cartCount }) => {
             return;
         }
 
+        // Prevent duplicate scans
+        if (isScanning) return;
+
         setIsScanning(true);
-        
+
         try {
-            if (nfc.current === null) {
-                nfc.current = new window.NDEFReader();
+            // Create or reuse reader instance
+            if (!nfcRef.current) {
+                nfcRef.current = new window.NDEFReader();
             }
 
-            // Start scanning - this opens the OS prompt
-            await nfc.current.scan();
-            
+            // AbortController so we can stop the scan cleanly
+            if (controllerRef.current) {
+                // previous controller exists -> abort it first
+                controllerRef.current.abort();
+                controllerRef.current = null;
+            }
+            controllerRef.current = new AbortController();
+
+            // Start scanning (pass the signal so we can cancel)
+            await nfcRef.current.scan({ signal: controllerRef.current.signal });
+
             // Set the manual bypass timer for the hackathon demo
-            let scanTimeout = setTimeout(() => {
+            timeoutRef.current = setTimeout(() => {
                 // If 8 seconds pass, offer manual navigation
                 const proceed = confirm("Scan failed or timed out. Do you want to proceed to the product page manually?");
                 if (proceed) {
-                    onNfcData(); // Manually trigger navigation
+                    // treat as manual detection
+                    handleNfcDetected();
                 } else {
                     setIsScanning(false); // Stop spinner
+                    // abort the scan to clean up
+                    if (controllerRef.current) {
+                        controllerRef.current.abort();
+                        controllerRef.current = null;
+                    }
                 }
             }, 8000); // 8-second timeout
 
-            // Attach success and error listeners
-            const reader = nfc.current;
-            
-            // Event listeners to clear the timeout and handle success/error
-            const readingListener = (event) => {
-                clearTimeout(scanTimeout); 
-                onNfcData(event); // Proceed with navigation
+            // Prepare listeners (store refs so we can remove them on cleanup)
+            readingListenerRef.current = (event) => {
+                // Clear timeout and proceed even if there are no records (locked tag / reader)
+                if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current);
+                    timeoutRef.current = null;
+                }
+                // Some ATMs/readers don't expose NDEF records but will still fire 'reading'
+                // So we accept that as detection. Event may include serialNumber.
+                handleNfcDetected(event);
             };
-            
-            const errorListener = (error) => {
+
+            errorListenerRef.current = (error) => {
                 console.error("NFC Reading Error:", error);
-                clearTimeout(scanTimeout);
+                if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current);
+                    timeoutRef.current = null;
+                }
                 setIsScanning(false);
-                alert("NFC Scan failed. Ensure NFC is enabled and try tapping the card again.");
+                alert("NFC Scan failed. Ensure NFC is enabled and try tapping again.");
+                // abort the scan to be safe
+                if (controllerRef.current) {
+                    controllerRef.current.abort();
+                    controllerRef.current = null;
+                }
             };
 
             // Add listeners
-            reader.addEventListener('reading', readingListener, { once: true });
-            reader.addEventListener('readingerror', errorListener, { once: true });
+            nfcRef.current.addEventListener('reading', readingListenerRef.current);
+            nfcRef.current.addEventListener('readingerror', errorListenerRef.current);
 
         } catch (error) {
             console.error("NFC Scan initiation failed:", error);
             setIsScanning(false);
+            // If the controller exists, abort and cleanup
+            if (controllerRef.current) {
+                try { controllerRef.current.abort(); } catch (e) {}
+                controllerRef.current = null;
+            }
             alert("NFC setup failed. Please try tapping the button again.");
         }
     };
     
-    // 3. Cleanup NFC listener on component unmount
+    // Cleanup NFC listener on component unmount
     useEffect(() => {
         return () => {
-            // Standard cleanup logic
+            // Abort any active scan
+            if (controllerRef.current) {
+                try { controllerRef.current.abort(); } catch (e) {}
+                controllerRef.current = null;
+            }
+
+            // Remove attached listeners if present
+            try {
+                if (nfcRef.current) {
+                    if (readingListenerRef.current) {
+                        nfcRef.current.removeEventListener('reading', readingListenerRef.current);
+                        readingListenerRef.current = null;
+                    }
+                    if (errorListenerRef.current) {
+                        nfcRef.current.removeEventListener('readingerror', errorListenerRef.current);
+                        errorListenerRef.current = null;
+                    }
+                }
+            } catch (e) {
+                // ignore removal errors
+            }
+
+            // Clear timeout if any
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
+
+            setIsScanning(false);
         };
     }, []);
 
