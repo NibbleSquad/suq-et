@@ -7,35 +7,29 @@ import { Button } from './ui/Button';
 const PaymentStatusModal = ({ paymentStatus, setPaymentStatus }) => {
     const navigate = useNavigate();
 
-    // Simulate payment processing with a 1.5 second delay
     useEffect(() => {
         if (paymentStatus === 'pending') {
             const timer = setTimeout(() => {
                 setPaymentStatus('success');
-            }, 1500); // 1.5 seconds delay
+            }, 1500);
 
             return () => clearTimeout(timer);
         }
     }, [paymentStatus, setPaymentStatus]);
 
-    // Handle closing the modal and navigating home
     const handleDone = () => {
         setPaymentStatus('idle');
         navigate('/');
     };
 
-    // Don't render anything if payment status is idle
     if (paymentStatus === 'idle') return null;
 
     return (
         <>
-            {/* Full-screen overlay backdrop */}
             <div className="fixed inset-0 bg-black/50 z-50 animate-in fade-in duration-200" />
 
-            {/* Modal container centered on screen */}
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-300">
                 {paymentStatus === 'pending' && (
-                    /* Pending/Processing State */
                     <div className="bg-background rounded-lg p-8 flex flex-col items-center justify-center space-y-4 max-w-sm w-full">
                         <Loader2 className="w-16 h-16 text-primary animate-spin" />
                         <h2 className="text-xl font-semibold text-foreground">Processing Payment...</h2>
@@ -46,7 +40,6 @@ const PaymentStatusModal = ({ paymentStatus, setPaymentStatus }) => {
                 )}
 
                 {paymentStatus === 'success' && (
-                    /* Success State */
                     <Card className="max-w-sm w-full animate-in zoom-in-95 duration-300">
                         <CardHeader className="text-center pb-4">
                             <div className="flex justify-center mb-4">

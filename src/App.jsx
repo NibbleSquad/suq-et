@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 
-// --- Import Page Components ---
-// All paths are relative to the src/ folder where App.jsx lives.
 import HomePage from './HomePage';
 import CategoriesPage from './CategoriesPage';
 import ShopListPage from './ShopListPage';
@@ -10,12 +8,8 @@ import ShopPage from './ShopPage';
 import ProductDetailPage from './ProductDetailPage';
 import CartPage from './CartPage';
 import SettingsPage from './SettingsPage';
-// Import Reusable Component
 import BottomNav from './components/BottomNav';
 import PaymentStatusModal from './components/PaymentStatusModal';
-
-
-// --- MOCK DATA DEFINITIONS ---
 const MOCK_SHOPS = [
     { id: 'shoa', name: 'Shoa Supermarket', category: 'groceries', image: '/images/shoa.jpg', description: 'Your everyday essentials.' },
     { id: 'tomoca', name: 'Tomoca Coffee', category: 'cafe', image: '/images/Tomoca Coffee.jpg', description: 'The original Ethiopian coffee.' },
@@ -37,15 +31,11 @@ const MOCK_CATEGORIES = [
     { id: 'beauty', name: 'Beauty', image: '/icons/beauty.png'},
     { id: 'home', name: 'Home Goods', image: '/icons/Home Goods.png'},
 ];
-// -----------------------------------------------------------
-
 
 function App() {
     const navigate = useNavigate();
     const [cart, setCart] = useState([]);
-    const [paymentStatus, setPaymentStatus] = useState('idle'); // 'idle' | 'pending' | 'success'
-    
-    // --- Cart Functions ---
+    const [paymentStatus, setPaymentStatus] = useState('idle');
     const handleAddToCart = (product, quantity) => {
         setCart(prevCart => {
             const existingItemIndex = prevCart.findIndex(item => item._id === product._id); 
@@ -73,12 +63,10 @@ function App() {
             return updatedCart;
         });
     };
-    // ------------------------------------------
 
     const cartItemCount = cart.reduce((count, item) => count + item.quantity, 0);
     const activePath = window.location.pathname;
 
-    // Props object passed to all Route elements
     const globalProps = {
         handleAddToCart, 
         cart, 
@@ -90,7 +78,6 @@ function App() {
         setPaymentStatus
     };
 
-    // Determine which tab is active for the BottomNav based on URL path
     const getActiveTab = (path) => {
         if (path === '/') return 'home';
         if (path.startsWith('/categories')) return 'categories';
@@ -102,36 +89,26 @@ function App() {
 
 
     return (
-        // Main container
         <div className="max-w-md mx-auto bg-background text-foreground min-h-screen pb-24 relative">
-            {/* The Routes defines the URL to Component mapping */}
             <Routes>
-                {/* 1. Main Tabs */}
                 <Route path="/" element={<HomePage {...globalProps} />} />
                 <Route path="/categories" element={<CategoriesPage {...globalProps} />} />
                 <Route path="/cart" element={<CartPage {...globalProps} />} />
                 <Route path="/settings" element={<SettingsPage {...globalProps} />} />
-
-                {/* 2. Dynamic/Detail Pages - These rely on useParams() */}
                 <Route path="/shoplist/:categoryId" element={<ShopListPage {...globalProps} />} />
                 <Route path="/shop/:shopId" element={<ShopPage {...globalProps} />} />
                 <Route path="/product/:productId" element={<ProductDetailPage {...globalProps} />} />
-                
-                {/* 3. Fallback */}
                 <Route path="*" element={<HomePage {...globalProps} />} /> 
             </Routes>
             
-            {/* Bottom Nav: Only visible on main navigation tabs */}
-            {/* Hide on dynamic detail pages (/product/ or /shop/) */}
             {!(activePath.startsWith('/product/') || activePath.startsWith('/shop/')) && (
                 <BottomNav 
                     activePage={getActiveTab(activePath)} 
-                    onNavigate={(page) => navigate(`/${page}`)} // Uses the navigate function for routing
+                    onNavigate={(page) => navigate(`/${page}`)}
                     cartCount={cartItemCount} 
                 />
             )}
             
-            {/* Payment Status Modal */}
             <PaymentStatusModal 
                 paymentStatus={paymentStatus} 
                 setPaymentStatus={setPaymentStatus} 
