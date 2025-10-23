@@ -4,37 +4,19 @@ import PageHeader from './components/PageHeader';
 import { Button } from "./components/ui/Button";
 import { Card } from "./components/ui/Card";
 import { Plus, Minus, ShoppingCart } from 'lucide-react';
-// Import API function
-import { createCheckout } from './utils/api';
 
-// Props passed from App.jsx: cart, handleUpdateCart
-const CartPage = ({ cart, handleUpdateCart }) => {
+// Props passed from App.jsx: cart, handleUpdateCart, setPaymentStatus
+const CartPage = ({ cart, handleUpdateCart, setPaymentStatus }) => {
    
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const deliveryFee = subtotal > 0 ? 50.00 : 0;
     const total = subtotal + deliveryFee;
 
    
-    const handleCheckout = async () => {
+    const handleCheckout = () => {
         if (cart.length === 0) return;
-
-       
-       
-        const storeId = cart[0].shopId;
-
-        try {
-           
-            const { paymentUrl } = await createCheckout(cart, storeId, total);
-
-           
-           
-            alert("Redirecting to payment gateway...");
-            window.location.href = paymentUrl;
-
-        } catch (error) {
-            console.error("Checkout failed:", error);
-            alert("Checkout failed. Please try again.");
-        }
+        // Trigger the mock payment flow
+        setPaymentStatus('pending');
     };
 
     return (

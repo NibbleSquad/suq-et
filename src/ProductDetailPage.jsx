@@ -3,11 +3,16 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MoreVertical, Star, Plus, Minus } from 'lucide-react';
 import { Button } from "./components/ui/Button"; 
 
-// Props: products (MOCK DATA), handleAddToCart
-const ProductDetailPage = ({ products, handleAddToCart }) => {
+// Props: products (MOCK DATA), handleAddToCart, setPaymentStatus
+const ProductDetailPage = ({ products, handleAddToCart, setPaymentStatus }) => {
     const navigate = useNavigate();
     const { productId } = useParams(); 
     const [quantity, setQuantity] = useState(1);
+    
+    // Handle Buy Now - triggers mock payment flow
+    const handleBuyNow = () => {
+        setPaymentStatus('pending');
+    };
     
     // CRITICAL: Find the product data based on the ID from the URL
     const product = products.find(p => p._id === productId); 
@@ -69,7 +74,7 @@ const ProductDetailPage = ({ products, handleAddToCart }) => {
             {/* Fixed footer with action buttons */}
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t flex space-x-4 max-w-md mx-auto z-50 h-[88px] items-center">
                 <Button onClick={() => handleAddToCart(product, quantity)} variant="secondary" className="flex-1 h-14 text-lg font-semibold">Add to cart</Button>
-                <Button className="flex-1 h-14 text-lg font-semibold">Buy Now</Button>
+                <Button onClick={handleBuyNow} className="flex-1 h-14 text-lg font-semibold">Buy Now</Button>
             </div>
         </div>
     );
