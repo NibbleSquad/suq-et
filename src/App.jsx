@@ -26,7 +26,7 @@ const MOCK_PRODUCTS = [
     { _id: 'prod1', id: 1, name: 'Fresh Avocado', price: 89.50, oldPrice: 120.00, image: '/images/avocado.png', shopId: 'shoa', rating: 4.8, reviews: 70, description: "Fresh, creamy avocados, perfect for any meal." },
     { _id: 'prod2', id: 5, name: 'Espresso', price: 40.00, image: '/images/espresso.png', shopId: 'tomoca', rating: 4.9, reviews: 150, description: "A rich and aromatic single shot of our finest blend."},
     { _id: 'prod3', id: 3, name: 'Organic Honey', price: 450.00, image: '/images/honey.png', shopId: 'shoa', rating: 4.7, reviews: 45, description: "100% pure organic honey, sourced locally." },
-    { _id: 'prod4', id: 4, name: 'The Mountain Is You', price: 850.00, oldPrice: 990.00, image: '/images/book_mountain.png', shopId: 'bookworld', rating: 4.9, reviews: 320, description: "A life-changing book by Brianna Wiest about transforming self-sabotage into self-mastery."},
+    { _id: 'prod4', id: 4, name: 'The Mountain Is You', price: 850.00, oldPrice: 990.00, image: '/images/themountainisyou.jpg', shopId: 'bookworld', rating: 4.9, reviews: 320, description: "A life-changing book by Brianna Wiest about transforming self-sabotage into self-mastery."},
     { _id: 'prod6', id: 7, name: 'Elegant Shirt', price: 1200.00, image: '/icons/cloths.png', shopId: 'apparel', rating: 4.2, reviews: 50, description: "A high-quality garment for formal wear."},
 ];
 const MOCK_CATEGORIES = [
